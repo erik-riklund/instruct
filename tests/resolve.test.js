@@ -1,4 +1,4 @@
-import { compile } from "~/index.js";
+import { resolve } from "~/index.js";
 import test from "~/library/testing.js";
 
 test(
@@ -9,7 +9,7 @@ test(
       () => {
         const value = "Hello world";
         const expected_result = [["text", "Hello world"]];
-        expect(compile(value)).toEqual(expected_result);
+        expect(resolve(value)).toEqual(expected_result);
       }
     ],
 
@@ -18,7 +18,7 @@ test(
       () => {
         const value = 42;
         const expected_result = [["text", "42"]];
-        expect(compile(value)).toEqual(expected_result);
+        expect(resolve(value)).toEqual(expected_result);
       }
     ],
 
@@ -31,7 +31,7 @@ test(
           ["text", "Hello"],
           ["close", "div"]
         ];
-        expect(compile(element)).toEqual(expected_result);
+        expect(resolve(element)).toEqual(expected_result);
       }
     ],
 
@@ -44,7 +44,7 @@ test(
           ["text", "Hello"],
           ["close", "div"]
         ];
-        expect(compile(element)).toEqual(expected_result);
+        expect(resolve(element)).toEqual(expected_result);
       }
     ],
 
@@ -69,7 +69,7 @@ test(
           ["close", "p"],
           ["close", "body"]
         ];
-        expect(compile(element)).toEqual(expected_result);
+        expect(resolve(element)).toEqual(expected_result);
       }
     ],
 
@@ -79,7 +79,7 @@ test(
         const context = { name: "Deno" };
         const value = (data) => `Hello ${data.name}`;
         const expected_result = [["text", "Hello Deno"]];
-        expect(compile(value, context)).toEqual(expected_result);
+        expect(resolve(value, context)).toEqual(expected_result);
       }
     ],
 
@@ -95,7 +95,7 @@ test(
           ["close", "title"],
           ["close", "head"]
         ];
-        expect(compile(element, context)).toEqual(expected_result);
+        expect(resolve(element, context)).toEqual(expected_result);
       }
     ],
 
@@ -108,7 +108,7 @@ test(
           ["title", "Hello world"]
         ];
         const context = {};
-        const result = compile(element, context);
+        const result = resolve(element, context);
         expect(result[1][0]).toEqual("inject");
         expect(context).toEqual({ stacks: { head: [] } });
       }
@@ -119,7 +119,7 @@ test(
       () => {
         const node = ["$fragments", "Hello", "world"];
         const expected_result = [["text", "Hello"], ["text", "world"]];
-        expect(compile(node)).toEqual(expected_result);
+        expect(resolve(node)).toEqual(expected_result);
       }
     ],
 
@@ -135,7 +135,7 @@ test(
           ["close", "strong"],
           ["close", "p"]
         ];
-        expect(compile(element)).toEqual(expected_result);
+        expect(resolve(element)).toEqual(expected_result);
       }
     ]
   ]

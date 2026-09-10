@@ -1,4 +1,4 @@
-export const compile = (value, data) => {
+export const resolve = (value, data) => {
   // value = node
   //       | string
   //       | function that returns another value
@@ -10,14 +10,14 @@ export const compile = (value, data) => {
   }
   else if (typeof value === "function") {
     const result = value(data);
-    instructions.push(...compile(result, data));
+    instructions.push(...resolve(result, data));
   }
   else if (Array.isArray(value)) {
     if (value[0].startsWith("$")) {
       switch (value[0].slice(1)) {
         case "fragments": {
           value.slice(1).forEach((fragment) => {
-            instructions.push(...compile(fragment, data));
+            instructions.push(...resolve(fragment, data));
           });
           break;
         }
@@ -26,7 +26,7 @@ export const compile = (value, data) => {
           data.stacks[value[1]] ??= [];
           instructions.push([
             "inject",
-            (data) => compile(["$fragments", data.stacks[value[1]]], data)
+            (data) => resolve(["$fragments", data.stacks[value[1]]], data)
           ]);
           break;
         }
@@ -39,7 +39,7 @@ export const compile = (value, data) => {
 
       instructions.push(["open", element, attributes]);
       children.forEach((child) => {
-        instructions.push(...compile(child, data));
+        instructions.push(...resolve(child, data));
       });
       instructions.push(["close", element]);
     }
