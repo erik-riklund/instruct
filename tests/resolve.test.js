@@ -2,10 +2,10 @@ import { resolve } from "~/index.js";
 import test from "~/library/testing.js";
 
 test(
-  "compile",
+  "resolve",
   ({ expect }) => [
     [
-      "should compile a string",
+      "should resolve a string",
       () => {
         const value = "Hello world";
         const expected_result = [["text", "Hello world"]];
@@ -14,7 +14,7 @@ test(
     ],
 
     [
-      "should compile a number",
+      "should resolve a number",
       () => {
         const value = 42;
         const expected_result = [["text", "42"]];
@@ -23,7 +23,7 @@ test(
     ],
 
     [
-      "should compile an element",
+      "should resolve an element",
       () => {
         const element = ["div", "Hello"];
         const expected_result = [
@@ -36,7 +36,7 @@ test(
     ],
 
     [
-      "should compile an element with attributes",
+      "should resolve an element with attributes",
       () => {
         const element = ["div", { class: "test" }, "Hello"];
         const expected_result = [
@@ -49,7 +49,7 @@ test(
     ],
 
     [
-      "should compile an element with children",
+      "should resolve an element with children",
       () => {
         const element = [
           "body",
@@ -74,7 +74,32 @@ test(
     ],
 
     [
-      "should compile a string value function with context",
+      "should resolve an element with dynamically generated children",
+      () => {
+        const context = { fruits: ["apple", "banana", "pear"] };
+        const element = [
+          "ul",
+          (data) => data.fruits.map((fruit) => ["li", fruit])
+        ];
+        const expected_result = [
+          ["open", "ul", null],
+          ["open", "li", null],
+          ["text", "apple"],
+          ["close", "li"],
+          ["open", "li", null],
+          ["text", "banana"],
+          ["close", "li"],
+          ["open", "li", null],
+          ["text", "pear"],
+          ["close", "li"],
+          ["close", "ul"]
+        ];
+        expect(resolve(element, context)).toEqual(expected_result);
+      }
+    ],
+
+    [
+      "should resolve a string value function with context",
       () => {
         const context = { name: "Deno" };
         const value = (data) => `Hello ${data.name}`;
@@ -84,7 +109,7 @@ test(
     ],
 
     [
-      "should compile a string value function with context (nested)",
+      "should resolve a string value function with context (nested)",
       () => {
         const context = { title: "Hello world" };
         const element = ["head", ["title", (data) => data.title]];
@@ -100,7 +125,7 @@ test(
     ],
 
     [
-      "should compile the specialized `$stack` node",
+      "should resolve the specialized `$stack` node",
       () => {
         const element = [
           "head",
@@ -115,7 +140,7 @@ test(
     ],
 
     [
-      "should compile the specalized `$fragments` node (strings)",
+      "should resolve the specalized `$fragments` node (strings)",
       () => {
         const node = ["$fragments", "Hello", "world"];
         const expected_result = [["text", "Hello"], ["text", "world"]];
@@ -124,7 +149,7 @@ test(
     ],
 
     [
-      "should compile the specalized `$fragments` node (nested nodes)",
+      "should resolve the specalized `$fragments` node (nested nodes)",
       () => {
         const element = ["p", ["$fragments", "Hello", ["strong", "world"]]];
         const expected_result = [

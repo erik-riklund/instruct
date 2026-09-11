@@ -1,6 +1,6 @@
 {
   "fmt": {
-    "lineWidth": 100,
+    "lineWidth": 80,
     "trailingCommas": "never",
     "nextControlFlowPosition": "maintain"
   },
@@ -11,6 +11,6 @@
   },
   "tasks": {
     "dist": "deno bundle index.js --minify --output html-producer.js",
-    "test": "deno test --watch --no-check --parallel"
+    "test": "deno test --watch --no-check"
   }
 }

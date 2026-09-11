@@ -29,62 +29,141 @@ test(
         const expected_result = "<h1>Hello Alice!</h1>";
         expect(produce(node, { name: "Alice" })).toBe(expected_result);
       }
+    ],
+
+    [
+      "should produce dynamic attribute values",
+      () => {
+        const node = ["html", {
+          lang: (data) => data.language
+        }];
+        const expected_result = '<!doctype html><html lang="en"></html>';
+        expect(produce(node, { language: "en" })).toBe(expected_result);
+      }
+    ],
+
+    [
+      "should produce dynamic nodes",
+      () => {
+        const node = (data) => ["h1", data.title];
+        const expected_result = "<h1>Hello world</h1>";
+        expect(produce(node, { title: "Hello world" })).toBe(expected_result);
+      }
+    ],
+
+    [
+      "should produce and inject stack contents (strings)",
+      () => {
+        const node = [
+          "html",
+          [
+            "head",
+            ["style", ["$stack", "styles"]],
+            ["title", "Hello world"]
+          ],
+          [
+            "body",
+            ["h1", "Hello world"],
+            ({ stacks }) => {
+              stacks.styles.push(".foo { color: red }");
+              return ["p", { class: "foo" }, "Lorem ipsum dolor sit amet"];
+            }
+          ]
+        ];
+        const expected_chunks = [
+          "<!doctype html>",
+          "<html>",
+          "<head>",
+          "<style>",
+          ".foo { color: red }",
+          "</style>",
+          "<title>Hello world</title>",
+          "</head>",
+          "<body>",
+          "<h1>Hello world</h1>",
+          '<p class="foo">Lorem ipsum dolor sit amet</p>',
+          "</body>",
+          "</html>"
+        ];
+        expect(produce(node)).toEqual(expected_chunks.join(""));
+      }
+    ],
+
+    [
+      "should produce and inject stack contents (nodes)",
+      () => {
+        const node = [
+          "html",
+          [
+            "head",
+            ["$stack", "metadata"],
+            ["title", "Hello world"]
+          ],
+          [
+            "body",
+            ["h1", "Hello world"],
+            ({ stacks }) => {
+              stacks.metadata.push(["meta", { charset: "utf-8" }]);
+              return ["p", { class: "foo" }, "Lorem ipsum dolor sit amet"];
+            }
+          ]
+        ];
+        const expected_chunks = [
+          "<!doctype html>",
+          "<html>",
+          "<head>",
+          '<meta charset="utf-8">',
+          "<title>Hello world</title>",
+          "</head>",
+          "<body>",
+          "<h1>Hello world</h1>",
+          '<p class="foo">Lorem ipsum dolor sit amet</p>',
+          "</body>",
+          "</html>"
+        ];
+        expect(produce(node)).toEqual(expected_chunks.join(""));
+      }
+    ],
+
+    [
+      "should produce and inject stack contents (mixed)",
+      () => {
+        const node = [
+          "html",
+          [
+            "head",
+            ["$stack", "metadata"],
+            ["style", ["$stack", "styles"]],
+            ["title", "Hello world"]
+          ],
+          [
+            "body",
+            ["h1", "Hello world"],
+            ({ stacks }) => {
+              stacks.styles.push(".foo { color: red }");
+              stacks.metadata.push(["meta", { charset: "utf-8" }]);
+              return ["p", { class: "foo" }, "Lorem ipsum dolor sit amet"];
+            }
+          ]
+        ];
+        const expected_chunks = [
+          "<!doctype html>",
+          "<html>",
+          "<head>",
+          '<meta charset="utf-8">',
+          "<style>",
+          ".foo { color: red }",
+          "</style>",
+          "<title>Hello world</title>",
+          "</head>",
+          "<body>",
+          "<h1>Hello world</h1>",
+          '<p class="foo">Lorem ipsum dolor sit amet</p>',
+          "</body>",
+          "</html>"
+        ];
+        expect(produce(node)).toEqual(expected_chunks.join(""));
+      }
     ]
   ]
 );
-
-//   ["passes data to dynamic values", () => {
-//     expect(produce(
-//       ["h1", data => `Hello ${data.name}!`],
-//       { name: "Alice" }
-//     )).toBe("<h1>Hello Alice!</h1>");
-//   }],
-
-//   ["resolves dynamic attributes", () => {
-//     expect(produce(
-//       ["html", {
-//         lang: data => data.language
-//       }],
-//       { language: "en" }
-//     )).toBe('<html lang="en"></html>');
-//   }],
-
-//   ["resolves dynamic nodes", () => {
-//     expect(produce(
-//       data => ["h1", data.title],
-//       { title: "Hello" }
-//     )).toBe("<h1>Hello</h1>");
-//   }],
-
-//   ["produces fragments", () => {
-//     expect(produce([
-//       "$fragment",
-//       ["h1", "Hello"],
-//       ["p", "World"]
-//     ])).toBe(
-//       "<h1>Hello</h1><p>World</p>"
-//     );
-//   }],
-
-//   ["produces lists", () => {
-//     expect(produce(
-//       ["ul",
-//         data => [
-//           "$fragment",
-//           ...data.items.map(item => ["li", item])
-//         ]
-//       ],
-//       { items: ["One", "Two", "Three"] }
-//     )).toBe(
-//       "<ul><li>One</li><li>Two</li><li>Three</li></ul>"
-//     );
-//   }],
-
-//   ["produces nothing for null", () => {
-//     expect(produce(null)).toBe("");
-//   }),
-
-//   ["produces nothing for false", () => {
-//     expect(produce(false)).toBe("");
-//   })
-// ]);

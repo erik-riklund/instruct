@@ -44,7 +44,9 @@ test(
           ["open", "div", { class: "foo", data_bar: "baz" }],
           ["close", "div"]
         ];
-        expect(render(instructions)).toBe('<div class="foo" data-bar="baz"></div>');
+        expect(render(instructions)).toBe(
+          '<div class="foo" data-bar="baz"></div>'
+        );
       }
     ],
 
@@ -55,7 +57,9 @@ test(
           ["open", "img", { src: "https://example.com/image.jpg" }],
           ["close", "img"]
         ];
-        expect(render(instructions)).toBe('<img src="https://example.com/image.jpg">');
+        expect(render(instructions)).toBe(
+          '<img src="https://example.com/image.jpg">'
+        );
       }
     ],
 

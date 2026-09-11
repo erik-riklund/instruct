@@ -21,8 +21,10 @@ const prefixes = {
   html: () => "<!doctype html>"
 };
 
-export const render = (instructions) => {
+export const render = (instructions, data) => {
   const result = [];
+  if (!instructions) return "";
+
   for (const [instruction, ...args] of instructions) {
     switch (instruction) {
       case "text": {
@@ -37,7 +39,9 @@ export const render = (instructions) => {
         if (tag in prefixes) {
           result.push(prefixes[tag].call());
         }
-        result.push(`<${tag}${attributes.length ? " " : ""}${attributes.join(" ")}>`);
+        result.push(
+          `<${tag}${attributes.length ? " " : ""}${attributes.join(" ")}>`
+        );
         break;
       }
       case "close": {
@@ -49,7 +53,7 @@ export const render = (instructions) => {
       }
       case "inject": {
         const [callback] = args;
-        result.push(render(callback()));
+        result.push(render(callback(data)));
         break;
       }
     }
