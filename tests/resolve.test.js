@@ -1,167 +1,115 @@
-import { resolve } from "~/index.js";
-import test from "~/library/testing.js";
+import group from "../testing.js";
+import { resolve } from "../index.js";
 
-test(
-  "resolve",
-  ({ expect }) => [
-    [
-      "should resolve a string",
-      () => {
-        const value = "Hello world";
-        const expected_result = [["text", "Hello world"]];
-        expect(resolve(value)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve a number",
-      () => {
-        const value = 42;
-        const expected_result = [["text", "42"]];
-        expect(resolve(value)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve an element",
-      () => {
-        const element = ["div", "Hello"];
-        const expected_result = [
-          ["open", "div", null],
-          ["text", "Hello"],
-          ["close", "div"]
-        ];
-        expect(resolve(element)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve an element with attributes",
-      () => {
-        const element = ["div", { class: "test" }, "Hello"];
-        const expected_result = [
-          ["open", "div", { class: "test" }],
-          ["text", "Hello"],
-          ["close", "div"]
-        ];
-        expect(resolve(element)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve an element with children",
-      () => {
-        const element = [
-          "body",
-          ["h1", "Hello world"],
-          ["p", "Today is a ", ["strong", "great day"]]
-        ];
-        const expected_result = [
-          ["open", "body", null],
-          ["open", "h1", null],
-          ["text", "Hello world"],
-          ["close", "h1"],
-          ["open", "p", null],
-          ["text", "Today is a "],
-          ["open", "strong", null],
-          ["text", "great day"],
-          ["close", "strong"],
-          ["close", "p"],
-          ["close", "body"]
-        ];
-        expect(resolve(element)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve an element with dynamically generated children",
-      () => {
-        const context = { fruits: ["apple", "banana", "pear"] };
-        const element = [
-          "ul",
-          (data) => data.fruits.map((fruit) => ["li", fruit])
-        ];
-        const expected_result = [
-          ["open", "ul", null],
-          ["open", "li", null],
-          ["text", "apple"],
-          ["close", "li"],
-          ["open", "li", null],
-          ["text", "banana"],
-          ["close", "li"],
-          ["open", "li", null],
-          ["text", "pear"],
-          ["close", "li"],
-          ["close", "ul"]
-        ];
-        expect(resolve(element, context)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve a string value function with context",
-      () => {
-        const context = { name: "Deno" };
-        const value = (data) => `Hello ${data.name}`;
-        const expected_result = [["text", "Hello Deno"]];
-        expect(resolve(value, context)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve a string value function with context (nested)",
-      () => {
-        const context = { title: "Hello world" };
-        const element = ["head", ["title", (data) => data.title]];
-        const expected_result = [
-          ["open", "head", null],
-          ["open", "title", null],
-          ["text", "Hello world"],
-          ["close", "title"],
-          ["close", "head"]
-        ];
-        expect(resolve(element, context)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve the specialized `$stack` node",
-      () => {
-        const element = [
-          "head",
-          ["$stack", "head"],
-          ["title", "Hello world"]
-        ];
-        const context = {};
-        const result = resolve(element, context);
-        expect(result[1][0]).toEqual("inject");
-        expect(context).toEqual({ stacks: { head: [] } });
-      }
-    ],
-
-    [
-      "should resolve the specalized `$fragments` node (strings)",
-      () => {
-        const node = ["$fragments", "Hello", "world"];
-        const expected_result = [["text", "Hello"], ["text", "world"]];
-        expect(resolve(node)).toEqual(expected_result);
-      }
-    ],
-
-    [
-      "should resolve the specalized `$fragments` node (nested nodes)",
-      () => {
-        const element = ["p", ["$fragments", "Hello", ["strong", "world"]]];
-        const expected_result = [
-          ["open", "p", null],
-          ["text", "Hello"],
-          ["open", "strong", null],
-          ["text", "world"],
-          ["close", "strong"],
-          ["close", "p"]
-        ];
-        expect(resolve(element)).toEqual(expected_result);
-      }
+group(
+  ({ expect }) => ({
+    tests: [
+      [
+        "should emit `open` and `close` instructions for a plain tag",
+        () => {
+          const node = ["body"];
+          const expected_result = [
+            ["open", "body"],
+            ["text", ">"],
+            ["close", "body"]
+          ];
+          expect(resolve(node)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should emit an `open` instruction with element attributes",
+        () => {
+          const node = ["div", { class: "card" }];
+          const expected_result = [
+            ["open", "div"],
+            ["attribute", "class", "card"],
+            ["text", ">"],
+            ["close", "div"]
+          ];
+          expect(resolve(node)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should emit an `attribute` instruction with kebab-cased attribute names",
+        () => {
+          const node = [
+            "body",
+            { data_theme: "light" }
+          ];
+          const expected_result = [
+            ["open", "body"],
+            ["attribute", "data-theme", "light"],
+            ["text", ">"],
+            ["close", "body"]
+          ];
+          expect(resolve(node)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should emit nested instructions and text content for child nodes",
+        () => {
+          const node = [
+            "section",
+            ["h1", "Hello world"],
+            ["p", "Lorem ipsum dolor sit amet"]
+          ];
+          const expected_result = [
+            ["open", "section"],
+            ["text", ">"],
+            ["open", "h1"],
+            ["text", ">"],
+            ["text", "Hello world"],
+            ["close", "h1"],
+            ["open", "p"],
+            ["text", ">"],
+            ["text", "Lorem ipsum dolor sit amet"],
+            ["close", "p"],
+            ["close", "section"]
+          ];
+          expect(resolve(node)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should emit instructions preserving both attributes and nested child trees",
+        () => {
+          const node = [
+            "section",
+            { class: "card" },
+            ["h1", "Hello world"],
+            ["p", { class: "intro" }, "Lorem ipsum dolor sit amet"]
+          ];
+          const expected_result = [
+            ["open", "section"],
+            ["attribute", "class", "card"],
+            ["text", ">"],
+            ["open", "h1"],
+            ["text", ">"],
+            ["text", "Hello world"],
+            ["close", "h1"],
+            ["open", "p"],
+            ["attribute", "class", "intro"],
+            ["text", ">"],
+            ["text", "Lorem ipsum dolor sit amet"],
+            ["close", "p"],
+            ["close", "section"]
+          ];
+          expect(resolve(node)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should emit a `resolve` instruction for callback content",
+        () => {
+          const callback = (data) => `Hello ${data.name}!`;
+          const node = ["div", callback];
+          const expected_result = [
+            ["open", "div"],
+            ["text", ">"],
+            ["resolve", callback],
+            ["close", "div"]
+          ];
+          expect(resolve(node)).toEqual(expected_result);
+        }
+      ]
     ]
-  ]
+  })
 );

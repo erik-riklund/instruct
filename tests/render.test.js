@@ -1,91 +1,161 @@
-import { render } from "~/index.js";
-import test from "~/library/testing.js";
+import group from "../testing.js";
+import { render } from "../index.js";
 
-test(
-  "render",
-  ({ expect }) => [
-    [
-      "should render text",
-      () => {
-        const instructions = [
-          ["text", "Hello world"]
-        ];
-        expect(render(instructions)).toBe("Hello world");
-      }
-    ],
-
-    [
-      "should render an empty element",
-      () => {
-        const instructions = [
-          ["open", "div", null],
-          ["close", "div"]
-        ];
-        expect(render(instructions)).toBe("<div></div>");
-      }
-    ],
-
-    [
-      "should render an element with text content",
-      () => {
-        const instructions = [
-          ["open", "div", null],
-          ["text", "Hello world"],
-          ["close", "div"]
-        ];
-        expect(render(instructions)).toBe("<div>Hello world</div>");
-      }
-    ],
-
-    [
-      "should render an element with attributes",
-      () => {
-        const instructions = [
-          ["open", "div", { class: "foo", data_bar: "baz" }],
-          ["close", "div"]
-        ];
-        expect(render(instructions)).toBe(
-          '<div class="foo" data-bar="baz"></div>'
-        );
-      }
-    ],
-
-    [
-      "should render a void element",
-      () => {
-        const instructions = [
-          ["open", "img", { src: "https://example.com/image.jpg" }],
-          ["close", "img"]
-        ];
-        expect(render(instructions)).toBe(
-          '<img src="https://example.com/image.jpg">'
-        );
-      }
-    ],
-
-    [
-      "should render an element with a prefix",
-      () => {
-        const instructions = [
-          ["open", "html", null],
-          ["close", "html"]
-        ];
-        expect(render(instructions)).toBe("<!doctype html><html></html>");
-      }
-    ],
-
-    [
-      "should render an element with the `inject` instruction",
-      () => {
-        const instructions = [
-          ["open", "div", null],
-          ["inject", () => {
-            return [["text", "Hello world"]];
-          }],
-          ["close", "div"]
-        ];
-        expect(render(instructions)).toBe("<div>Hello world</div>");
-      }
+group(
+  ({ expect }) => ({
+    tests: [
+      [
+        "should render an empty element",
+        () => {
+          const instructions = [
+            ["open", "div"],
+            ["text", ">"],
+            ["close", "div"]
+          ];
+          const expected_result = "<div></div>";
+          expect(render(instructions)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should render an element containing text content",
+        () => {
+          const instructions = [
+            ["open", "div"],
+            ["text", ">"],
+            ["text", "Hello world"],
+            ["close", "div"]
+          ];
+          const expected_result = "<div>Hello world</div>";
+          expect(render(instructions)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should render an element with an unquoted attribute value and text content",
+        () => {
+          const instructions = [
+            ["open", "div"],
+            ["attribute", "class", "card"],
+            ["text", ">"],
+            ["text", "Hello world"],
+            ["close", "div"]
+          ];
+          const expected_result = "<div class=card>Hello world</div>";
+          expect(render(instructions)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should render a void element with a quoted attribute value",
+        () => {
+          const instructions = [
+            ["open", "img"],
+            ["attribute", "src", "/images/test.png"],
+            ["text", ">"]
+          ];
+          const expected_result = '<img src="/images/test.png">';
+          expect(render(instructions)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should render a void element with mixed attribute value types",
+        () => {
+          const instructions = [
+            ["open", "img"],
+            ["attribute", "src", "/images/test.png"],
+            ["attribute", "width", 256],
+            ["text", ">"]
+          ];
+          const expected_result = '<img src="/images/test.png" width=256>';
+          expect(render(instructions)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should render a boolean attribute when true",
+        () => {
+          const instructions = [
+            ["open", "button"],
+            ["attribute", "disabled", true],
+            ["text", ">"],
+            ["close", "button"]
+          ];
+          const expected_result = "<button disabled></button>";
+          expect(render(instructions)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should omit a boolean attribute when false",
+        () => {
+          const instructions = [
+            ["open", "button"],
+            ["attribute", "disabled", false],
+            ["text", ">"],
+            ["close", "button"]
+          ];
+          const expected_result = "<button></button>";
+          expect(render(instructions)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should execute a `resolve` instruction to render dynamic text content",
+        () => {
+          const instructions = [
+            ["open", "div"],
+            ["text", ">"],
+            ["resolve", (data) => `Hello ${data.name}`],
+            ["close", "div"]
+          ];
+          const result = render(instructions, { name: "Bob" });
+          const expected_result = "<div>Hello Bob</div>";
+          expect(result).toEqual(expected_result);
+        }
+      ],
+      [
+        "should execute a callback function in an `attribute` " +
+        "instruction to render dynamic attribute values",
+        () => {
+          const instructions = [
+            ["open", "body"],
+            ["attribute", "data-theme", (data) => data.theme],
+            ["text", ">"],
+            ["close", "body"]
+          ];
+          const result = render(instructions, { theme: "light" });
+          const expected_result = "<body data-theme=light></body>";
+          expect(result).toEqual(expected_result);
+        }
+      ],
+      [
+        "should execute a `resolve` instruction returning a nested node structure",
+        () => {
+          const instructions = [
+            ["open", "div"],
+            ["text", ">"],
+            ["resolve", ({ user }) => {
+              return user ? ["h1", `Hello ${user.name}`] : null;
+            }],
+            ["close", "div"]
+          ];
+          const user = { name: "Bob" };
+          const result = render(instructions, { user });
+          const expected_result = "<div><h1>Hello Bob</h1></div>";
+          expect(result).toEqual(expected_result);
+        }
+      ],
+      [
+        "should omit output when a `resolve` instruction returns null",
+        () => {
+          const instructions = [
+            ["open", "div"],
+            ["text", ">"],
+            ["resolve", ({ user }) => {
+              return user ? ["h1", `Hello ${user.name}`] : null;
+            }],
+            ["close", "div"]
+          ];
+          const result = render(instructions, { user: null });
+          const expected_result = "<div></div>";
+          expect(result).toEqual(expected_result);
+        }
+      ]
     ]
-  ]
+  })
 );
