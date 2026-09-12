@@ -21,9 +21,6 @@ const prefixes = {
   html: () => "<!doctype html>"
 };
 
-/**
- * ...
- */
 export const render = (instructions, data = {}) => {
   const result = [];
   if (!instructions?.length) {
@@ -41,7 +38,6 @@ export const render = (instructions, data = {}) => {
         result.push(`<${tag}`);
         break;
       }
-
       case "close": {
         const [tag] = args;
         if (!void_elements.includes(tag)) {
@@ -49,7 +45,6 @@ export const render = (instructions, data = {}) => {
         }
         break;
       }
-
       case "attribute": {
         const [key, value] = args;
         if (typeof value === "boolean") {
@@ -75,23 +70,19 @@ export const render = (instructions, data = {}) => {
         }
         break;
       }
-
       case "text": {
         result.push(args[0]);
         break;
       }
-
       case "resolve": {
         const value = args[0].call(null, data);
         result.push(render(resolve(value), data));
         break;
       }
-
       case "invoke": {
         args[0].call(null, data);
         break;
       }
-
       case "defer": {
         deferred_values.push(result.length);
         result.push(args[0]); // the callback is replaced with its result on the second pass.
@@ -105,13 +96,9 @@ export const render = (instructions, data = {}) => {
       result[index] = render(resolve(result[index]), data);
     }
   }
-
   return result.join("");
 };
 
-/**
- * ...
- */
 export const resolve = (value) => {
   // value = node
   //       | string
