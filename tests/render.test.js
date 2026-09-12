@@ -155,6 +155,42 @@ group(
           const expected_result = "<div></div>";
           expect(result).toEqual(expected_result);
         }
+      ],
+      [
+        "should evaluate `defer` instructions after completing " +
+        "rendering of the document tree",
+        () => {
+          const instructions = [
+            ["open", "head"],
+            ["text", ">"],
+            ["invoke", (data) => {
+              data.stacks = { metadata: [] };
+            }],
+            ["defer", (data) => {
+              return ["$fragments", ...data.stacks.metadata];
+            }],
+            ["close", "head"],
+            ["open", "body"],
+            ["text", ">"],
+            ["open", "h1"],
+            ["text", ">"],
+            ["invoke", ({ stacks }) => {
+              stacks.metadata.push(["meta", { charset: "utf-8" }]);
+            }],
+            ["text", "Hello world"],
+            ["close", "h1"],
+            ["close", "body"]
+          ];
+          const expected_chunks = [
+            "<head>",
+            "<meta charset=utf-8>",
+            "</head>",
+            "<body>",
+            "<h1>Hello world</h1>",
+            "</body>"
+          ];
+          expect(render(instructions)).toEqual(expected_chunks.join(""));
+        }
       ]
     ]
   })

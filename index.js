@@ -30,6 +30,7 @@ export const render = (instructions, data = {}) => {
     return ""; // no instructions were provided.
   }
 
+  const deferred_values = [];
   for (const [instruction, ...args] of instructions) {
     switch (instruction) {
       case "open": {
@@ -85,6 +86,23 @@ export const render = (instructions, data = {}) => {
         result.push(render(resolve(value), data));
         break;
       }
+
+      case "invoke": {
+        args[0].call(null, data);
+        break;
+      }
+
+      case "defer": {
+        deferred_values.push(result.length);
+        result.push(args[0]); // the callback is replaced with its result on the second pass.
+        break;
+      }
+    }
+  }
+
+  if (deferred_values.length) {
+    for (const index of deferred_values) {
+      result[index] = render(resolve(result[index]), data);
     }
   }
 
@@ -120,8 +138,28 @@ export const resolve = (value) => {
     }
 
     if (value[0].startsWith("$")) {
-      switch (value[0].slice(1)) {
-        // todo: implement special instructions
+      switch (value[0]) {
+        case "$stack": {
+          instructions.push([
+            "invoke",
+            (data) => {
+              data.stacks ??= {};
+              data.stacks[value[1]] = [];
+            }
+          ]);
+          instructions.push([
+            "defer",
+            (data) => ["$fragments", ...data.stacks[value[1]]]
+          ]);
+          break;
+        }
+
+        case "$fragments": {
+          value.slice(1).forEach((fragment) => {
+            instructions.push(...resolve(fragment));
+          });
+          break;
+        }
       }
       return instructions;
     }

@@ -109,6 +109,44 @@ group(
           ];
           expect(resolve(node)).toEqual(expected_result);
         }
+      ],
+      [
+        "should emit `invoke` and `defer` instructions with handler functions for `$stack`",
+        () => {
+          const result = resolve(["$stack", "test"]);
+          expect(result[0][0]).toBe("invoke");
+          expect(typeof result[0][1]).toBe("function");
+          expect(result[1][0]).toBe("defer");
+          expect(typeof result[1][1]).toBe("function");
+        }
+      ],
+      [
+        "should emit instructions for `$fragments` children without container tags",
+        () => {
+          const node = ["$fragments", "Hello", "world"];
+          const expected_result = [["text", "Hello"], ["text", "world"]];
+          expect(resolve(node)).toEqual(expected_result);
+        }
+      ],
+      [
+        "should inline instructions for nested `$fragments` directly into parent elements",
+        () => {
+          const element = [
+            "p",
+            ["$fragments", "Hello", ["strong", "world"]]
+          ];
+          const expected_result = [
+            ["open", "p"],
+            ["text", ">"],
+            ["text", "Hello"],
+            ["open", "strong"],
+            ["text", ">"],
+            ["text", "world"],
+            ["close", "strong"],
+            ["close", "p"]
+          ];
+          expect(resolve(element)).toEqual(expected_result);
+        }
       ]
     ]
   })
