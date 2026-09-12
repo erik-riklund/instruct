@@ -10,6 +10,6 @@
   },
   "tasks": {
     "dist": "deno bundle index.js --minify --output instruct.js",
-    "test": "deno test --watch --parallel --no-check --fail-fast"
+    "test": "deno test --watch --no-check --fail-fast"
   }
 }
