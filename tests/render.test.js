@@ -1,5 +1,5 @@
-import group from "../testing.js";
-import { render } from "../index.js";
+import group from "~/testing.js";
+import { render } from "~/index.js";
 
 group(
   ({ expect }) => ({
